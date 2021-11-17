@@ -7,7 +7,15 @@ module.exports = function(config, elasticsearch) {
   var elasticClient;
 
   elasticClient = new elasticsearch.Client({
-    host: config.ElasticSearchHost,
+    // The following is used for authentication for those using searchguard
+    host: [
+      {
+        host: 'elasticsearch.my.com',
+        auth: 'Username:Password',
+        protocol: 'https',
+        port: 9200
+      }
+    ],
 //    log: 'trace',
     log: 'error',
 //    log: 'info;',
@@ -30,22 +38,22 @@ module.exports = function(config, elasticsearch) {
         try {
           cspData = req.body;
           cspData["@timestamp"] = timestamp;
-          cspData["client-ip"]  = realIP;
+          cspData["source.ip"]  = realIP;
           cspData["user-agent"] = userAgent;
           cspData["referer"]    = referer;
 
           if (cspData["csp-report"]) {
             cspData["parse"] = "valid";
-            cspData["error"] = "";
+            cspData["error.message"] = "";
           }
           else {
             cspData["parse"] = "error";
-            cspData["error"] = "csp-report object not found";
+            cspData["error.message"] = "csp-report object not found";
           }
         } 
         catch (e) {
           cspData["parse"] = "error";
-          cspData["error"] = e;
+          cspData["error.message"] = e;
         }
 
         return next(null, cspData);
@@ -56,7 +64,7 @@ module.exports = function(config, elasticsearch) {
         var yearMonthDay = timestamp.substr(0, 10).replace(/-/g, '.');  
         elasticClient.index({
           index: config.ElasticSearchIndex + '-' + yearMonthDay,
-          type: 'csp',
+          type: '_doc',
           body: cspData
         }, function(err) {
           if (err) {
