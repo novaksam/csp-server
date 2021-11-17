@@ -7,7 +7,7 @@ var restify = require('restify'),
   index = require('./index')(config, elasticsearch),
   app = restify.createServer({});
 
-app.use(restify.bodyParser({ mapParams: false }));
+app.use(restify.plugins.jsonBodyParser({ mapParams: false, rejectUnknown: false }));
 app.get('/_healthcheck', healthcheck);
 app.post('/index', index);
 

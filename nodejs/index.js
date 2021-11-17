@@ -23,7 +23,7 @@ module.exports = function(config, elasticsearch) {
   });
 
   return function(req, res, next) {
-    var cspData;
+    var cspData = {};
     var timestamp = new Date().toISOString();
     async.waterfall([
       function cspDataParse(next) {
@@ -50,7 +50,7 @@ module.exports = function(config, elasticsearch) {
             cspData["parse"] = "error";
             cspData["error.message"] = "csp-report object not found";
           }
-        } 
+        }
         catch (e) {
           cspData["parse"] = "error";
           cspData["error.message"] = e;
@@ -61,7 +61,7 @@ module.exports = function(config, elasticsearch) {
       function indexIntoElasticSearch(cspData, next) {
 //        console.log("Indexing to Elastic data %s", cspData);
 //        req.log.info(sprintf("Indexing to Elastic data %s", cspData));
-        var yearMonthDay = timestamp.substr(0, 10).replace(/-/g, '.');  
+        var yearMonthDay = timestamp.substr(0, 10).replace(/-/g, '.');
         elasticClient.index({
           index: config.ElasticSearchIndex + '-' + yearMonthDay,
           type: '_doc',
